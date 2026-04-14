@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Météo-Agri – Conseils pour producteurs ruraux</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Notre style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-cloud-sun-rain"></i> Météo-Agri</h1>
+            <p>Prévisions & conseils pour l’agriculture</p>
+        </header>
+
+        <div class="location-card">
+            <h2><i class="fas fa-map-marker-alt"></i> Localisation</h2>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Nom de la ville (ex: Sarh, Moundou...)" />
+                <button id="search-btn"><i class="fas fa-search"></i> Chercher</button>
+            </div>
+        </div>
+
+        <div class="current-weather">
+            <h2><i class="fas fa-sun"></i> Météo actuelle</h2>
+            <div id="city-name">--</div>
+            <div class="temp" id="temp">--°C</div>
+            <div class="condition" id="condition">--</div>
+            <div class="details">
+                <span><i class="fas fa-tint"></i> Humidité : <span id="humidity">--</span>%</span>
+                <span><i class="fas fa-cloud-rain"></i> Pluie : <span id="rain">--</span> mm</span>
+                <span><i class="fas fa-wind"></i> Vent : <span id="wind">--</span> km/h</span>
+            </div>
+        </div>
+
+        <h2><i class="fas fa-calendar-week"></i> Prévisions 3 jours</h2>
+        <div id="forecast" class="forecast">Chargement...</div>
+
+        <h2><i class="fas fa-exclamation-triangle"></i> Alertes agricoles</h2>
+        <div id="alerts" class="alerts">Chargement...</div>
+
+        <h2><i class="fas fa-leaf"></i> Conseils du jour</h2>
+        <div id="advice" class="advice">Chargement...</div>
+
+        <!-- Carte Leaflet -->
+        <div id="map"></div>
+
+        <footer>
+            <div>Dernière mise à jour : <span id="update-time">--</span></div>
+            <div style="margin-top: 10px;">
+                <button id="export-btn" class="footer-btn"><i class="fas fa-download"></i> Exporter favoris</button>
+                <button id="import-btn" class="footer-btn"><i class="fas fa-upload"></i> Importer</button>
+                <button id="sync-btn" class="footer-btn"><i class="fas fa-sync-alt"></i> Sync Firebase</button>
+            </div>
+            <input type="file" id="import-file" style="display:none" accept=".json">
+            <p style="margin-top: 15px;">© 2025 Météo-Agri – Données OpenWeatherMap & OpenStreetMap</p>
+        </footer>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Cordova (sera remplacé à l’exécution) -->
+    <script src="cordova.js"></script>
+    <!-- Plugin SQLite (pour Cordova) -->
+    <script src="https://cdn.jsdelivr.net/npm/cordova-sqlite-storage@6.0.0/dist/sqlite-plugin.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <!-- Application principale -->
+    <script src="app.js"></script>
+</body>
+</html>

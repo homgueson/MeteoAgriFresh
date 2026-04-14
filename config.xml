@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.tolbert.meteoagri" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
+    <name>MeteoAgri</name>
+    <description>Informations météo pour producteurs ruraux</description>
+    <author email="tolbert@example.com">Tolbert</author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="https://*" />
+    <allow-intent href="http://*" />
+    <icon src="www/icon.png" />
+
+    <!-- Plugins nécessaires -->
+    <plugin name="cordova-plugin-geolocation" />
+    <plugin name="cordova-sqlite-storage" />
+    
+    <!-- Préférences pour la géolocalisation -->
+    <preference name="Geolocation" value="true" />
+</widget>
