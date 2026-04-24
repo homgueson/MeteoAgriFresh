@@ -20,24 +20,27 @@ Correction apportée :
   le chemin transmis à addDataFromPath() était incomplet.
 """
 
+import argparse
 import os
 import sys
 import arcpy
 
 # ---------------------------------------------------------------------------
-# Configuration — adapter selon l'arborescence réelle du projet
+# Defaults — overridable via CLI arguments or environment variables.
+# CLI flags take precedence over env vars; env vars take precedence over the
+# compiled-in defaults below.
+#
+# Usage examples :
+#   python generate_aprx_zd.py --workspace D:\Projets\ZD --template D:\tpl\vide.aprx
+#   ZD_WORKSPACE=D:\Projets\ZD python generate_aprx_zd.py
 # ---------------------------------------------------------------------------
 
-# Répertoire racine contenant les sous-dossiers par commune.
-# Chaque sous-dossier doit contenir :
-#   PIAO_<commune>.gdb   et   Resultats.gdb   (ou un motif similaire)
-WORKSPACE_ROOT = r"C:\ProjetZD"
+_DEFAULT_WORKSPACE = r"C:\ProjetZD"
+_DEFAULT_TEMPLATE  = r"C:\ProjetZD\templates\template_vide.aprx"
+_DEFAULT_MAP_NAME  = "Map"
 
-# Nom du template ArcGIS Pro à copier pour chaque commune.
-TEMPLATE_APRX = r"C:\ProjetZD\templates\template_vide.aprx"
-
-# Nom de la carte à utiliser / renommer dans le template.
-TEMPLATE_MAP_NAME = "Map"
+# Module-level name used by process_commune(); overwritten by _parse_args().
+TEMPLATE_MAP_NAME = os.environ.get("ZD_TEMPLATE_MAP_NAME", _DEFAULT_MAP_NAME)
 
 # ---------------------------------------------------------------------------
 # Helpers de journalisation
@@ -169,8 +172,12 @@ def add_layer(aprx_map, layer_alias, full_path):
         return None
     try:
         aprx_map.addDataFromPath(full_path)
+        layers = aprx_map.listLayers()
+        if not layers:
+            log_err(f"Couche '{layer_alias}' ajoutée mais introuvable dans la carte.")
+            return None
         # La couche ajoutée est la première de la liste (ajout en tête)
-        added = aprx_map.listLayers()[0]
+        added = layers[0]
         added.name = layer_alias
         log_ok(f"Couche ajoutée : {layer_alias}  \u2190  {os.path.basename(full_path)}")
         return added
@@ -288,7 +295,7 @@ def apply_labels_blocs(layer):
 # Traitement d'une commune
 # ---------------------------------------------------------------------------
 
-def process_commune(commune_name, commune_dir):
+def process_commune(commune_name, commune_dir, template_aprx):
     """Génère le projet .aprx pour une commune donnée."""
     log_head(f"COMMUNE : {commune_name}")
 
@@ -301,7 +308,7 @@ def process_commune(commune_name, commune_dir):
         os.remove(aprx_path)
 
     try:
-        aprx_template = arcpy.mp.ArcGISProject(TEMPLATE_APRX)
+        aprx_template = arcpy.mp.ArcGISProject(template_aprx)
         aprx_template.saveACopy(aprx_path)
         log_ok(f"Fichier .aprx créé (template ArcGIS Pro)")
     except Exception as exc:
@@ -432,15 +439,51 @@ def list_communes(workspace):
 # Point d'entrée
 # ---------------------------------------------------------------------------
 
+def _parse_args():
+    """Parse CLI arguments; env vars are used as fallbacks for defaults."""
+    parser = argparse.ArgumentParser(
+        description="Génère un projet ArcGIS Pro (.aprx) par commune."
+    )
+    parser.add_argument(
+        "--workspace",
+        default=os.environ.get("ZD_WORKSPACE", _DEFAULT_WORKSPACE),
+        help=(
+            "Répertoire racine contenant un sous-dossier par commune "
+            "(défaut : env ZD_WORKSPACE ou %(default)s)"
+        ),
+    )
+    parser.add_argument(
+        "--template",
+        default=os.environ.get("ZD_TEMPLATE", _DEFAULT_TEMPLATE),
+        help=(
+            "Chemin vers le fichier .aprx template "
+            "(défaut : env ZD_TEMPLATE ou %(default)s)"
+        ),
+    )
+    parser.add_argument(
+        "--map-name",
+        default=os.environ.get("ZD_TEMPLATE_MAP_NAME", _DEFAULT_MAP_NAME),
+        help="Nom de la carte dans le template (défaut : %(default)s)",
+    )
+    return parser.parse_args()
+
+
 def main():
-    communes = list_communes(WORKSPACE_ROOT)
+    global TEMPLATE_MAP_NAME
+
+    args = _parse_args()
+    workspace_root  = args.workspace
+    template_aprx   = args.template
+    TEMPLATE_MAP_NAME = args.map_name
+
+    communes = list_communes(workspace_root)
     if not communes:
-        log_err(f"Aucune commune trouvée dans : {WORKSPACE_ROOT}")
+        log_err(f"Aucune commune trouvée dans : {workspace_root}")
         sys.exit(1)
 
     for commune_name, commune_dir in communes:
         try:
-            process_commune(commune_name, commune_dir)
+            process_commune(commune_name, commune_dir, template_aprx)
         except Exception as exc:
             log_err(f"Erreur inattendue pour {commune_name} : {exc}")
 
